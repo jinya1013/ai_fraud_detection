@@ -16,7 +16,8 @@ dependencies = [
     "uvicorn",
     "python-dotenv",
     "websockets",
-    "twilio",    
+    "twilio",
+    "python-multipart",
 ]
 
 [project.optional-dependencies]

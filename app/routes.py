@@ -3,14 +3,16 @@ import asyncio
 import websockets
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse
-from twilio.twiml.voice_response import VoiceResponse, Connect, Dial
-from .config import OPENAI_API_KEY, VOICE, SYSTEM_MESSAGE, KIKUCHI_API_URL, LOG_EVENT_TYPES, FORWARD_PHONE_NUMBER
+from twilio.twiml.voice_response import VoiceResponse, Connect
+from .config import OPENAI_API_KEY, VOICE, SYSTEM_MESSAGE, KIKUCHI_API_URL, LOG_EVENT_TYPES, FORWARD_PHONE_NUMBER, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
+from twilio.rest import Client
 from .twilio_handler import client
 from .openai_handler import send_session_update
 from .audio import send_base64_audio  # 必要に応じて利用
 
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
 call_sid = None
-response = None
 
 router = APIRouter()
 
@@ -20,7 +22,7 @@ async def index_page():
 
 @router.api_route("/incoming-call", methods=["GET", "POST"])
 async def handle_incoming_call(request: Request):
-    global call_sid, response
+    global call_sid
     """Twilioからの着信を処理し、Media Streamへの接続を促すTwiMLを返す。"""
     # フォームデータを取得
     form_data = await request.form()
@@ -43,7 +45,7 @@ async def handle_incoming_call(request: Request):
     
     host = request.url.hostname
     response = VoiceResponse()
-    response.say("もしもした、ただいま、AIアシスタントに接続しております。この通話は安全のために録音されています。ご了承ください。", language="ja-JP")
+    response.say("もしもした、ただいま、AIアシスタントに接続しております。この通話は安全のために録音されています。ご了承ください。それではお話しください。", language="ja-JP")
     connect = Connect()
     connect.stream(url=f'wss://{host}/media-stream')
     response.append(connect)
@@ -52,7 +54,7 @@ async def handle_incoming_call(request: Request):
 @router.websocket("/media-stream")
 async def handle_media_stream(websocket: WebSocket):
     """TwilioとOpenAI間のWebSocket接続を処理する。"""
-    global call_sid, response
+    global call_sid
     print(f"WebSocket接続: 発信者番号 = {call_sid}")
     await websocket.accept()
     

@@ -1,20 +1,21 @@
 import os
+
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("Missing the OpenAI API key. Please set it in the .env file.")
 
-PORT = int(os.getenv('PORT', 5050))
-KIKUCHI_API_URL = os.getenv('KIKUCHI_API_URL')
-NUMBER_TO_FORWARD = os.getenv('NUMBER_TO_FORWARD')
+PORT = int(os.getenv("PORT", 5050))
+KIKUCHI_API_URL = os.getenv("KIKUCHI_API_URL")
+NUMBER_TO_FORWARD = os.getenv("NUMBER_TO_FORWARD")
 
-VOICE = 'sage'
+VOICE = "sage"
 
-SYSTEM_MESSAGE = (
-"""あなたは、高齢者を電話やオンラインでの詐欺から守るためのAIエージェントです。以下に、あなたの主な役割と具体的な機能について詳しく説明します。
+SYSTEM_MESSAGE = """あなたは、高齢者を電話やオンラインでの詐欺から守るためのAIエージェントです。以下に、あなたの主な役割と具体的な機能について詳しく説明します。
 # 主な役割
 - かかってくる電話に高齢者の代わりに対応します。
 - 通話内容を分析し、詐欺の疑いがあるかどうかを判断します。
@@ -59,15 +60,18 @@ SYSTEM_MESSAGE = (
 - 通話内容の分析は正確性を重視し、誤検知を避けるよう努めます。  
 - 高齢者のプライバシーを尊重し、通話内容を適切に取り扱います。  
 - システムの動作は、高齢者の安全を最優先に考え、迅速かつ適切に行います。"""
-)
 
 LOG_EVENT_TYPES = [
-    'response.content.done', 'rate_limits.updated', 'response.done',
-    'input_audio_buffer.committed', 'input_audio_buffer.speech_stopped',
-    'input_audio_buffer.speech_started', 'session.created'
+    "response.content.done",
+    "rate_limits.updated",
+    "response.done",
+    "input_audio_buffer.committed",
+    "input_audio_buffer.speech_stopped",
+    "input_audio_buffer.speech_started",
+    "session.created",
 ]
 
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-FORWARD_PHONE_NUMBER = os.getenv('FORWARD_PHONE_NUMBER')
-AI_PHONE_NUMBER = os.getenv('AI_PHONE_NUMBER')
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+FORWARD_PHONE_NUMBER = os.getenv("FORWARD_PHONE_NUMBER")
+AI_PHONE_NUMBER = os.getenv("AI_PHONE_NUMBER")

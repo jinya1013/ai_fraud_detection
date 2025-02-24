@@ -1,7 +1,9 @@
-import uvicorn
 from fastapi import FastAPI
-from .routes import router as media_router
+import uvicorn
+
 from .config import PORT
+from .routes import router as media_router
+
 
 app = FastAPI()
 app.include_router(media_router)

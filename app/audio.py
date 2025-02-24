@@ -40,7 +40,7 @@ def send_audio_data(
         return False
 
 
-def send_base64_audio(user_audio_data: list, ai_audio_data: list, phone_id: str, api_url: str):
+def send_base64_audio(audio_data: list, phone_id: str, api_url: str):
     """
     ユーザとAIのBase64エンコードされた音声チャンクを結合し、
     外部APIへ送信する。
@@ -48,13 +48,7 @@ def send_base64_audio(user_audio_data: list, ai_audio_data: list, phone_id: str,
     headers = {"Content-Type": "application/json"}
 
     try:
-        user_encoded_audio = process_audio_chunks(user_audio_data)
-        send_audio_data(user_encoded_audio, phone_id, "user", api_url, headers)
+        encoded_audio = process_audio_chunks(audio_data)
+        send_audio_data(encoded_audio, phone_id, "ai", api_url, headers)
     except ValueError as e:
-        print(f"ユーザ音声データの処理エラー: {e}")
-
-    try:
-        ai_encoded_audio = process_audio_chunks(ai_audio_data)
-        send_audio_data(ai_encoded_audio, phone_id, "ai", api_url, headers)
-    except ValueError as e:
-        print(f"AI音声データの処理エラー: {e}")
+        print(f"音声データの処理エラー: {e}")

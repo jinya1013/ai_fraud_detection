@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 
 from fastapi import APIRouter
@@ -17,6 +18,7 @@ from .config import KIKUCHI_API_URL
 from .config import LOG_EVENT_TYPES
 from .config import OPENAI_API_KEY
 from .config import SYSTEM_MESSAGE
+from .config import SYSTEM_MESSAGE_EN
 from .config import TWILIO_ACCOUNT_SID
 from .config import TWILIO_AUTH_TOKEN
 from .config import VOICE
@@ -78,8 +80,7 @@ async def handle_media_stream(websocket: WebSocket):
     print(f"WebSocket接続: 発信者番号 = {call_sid}")
     await websocket.accept()
 
-    user_audio_data = []
-    ai_audio_data = []
+    audio_data = []
 
     async with websockets.connect(
         "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
@@ -100,7 +101,12 @@ async def handle_media_stream(websocket: WebSocket):
                         data["event"] == "media"
                         and openai_ws.state == websockets.protocol.State.OPEN
                     ):
-                        user_audio_data.append(data["media"]["payload"])
+                        media_payload = data["media"]["payload"]
+                        padding = len(media_payload) % 4
+                        if padding != 0:
+                            media_payload += "=" * (4 - padding)
+                        audio_data.append(media_payload)
+
                         audio_append = {
                             "type": "input_audio_buffer.append",
                             "audio": data["media"]["payload"],
@@ -136,7 +142,10 @@ async def handle_media_stream(websocket: WebSocket):
                     ):
                         try:
                             audio_payload = response_data["delta"]
-                            ai_audio_data.append(audio_payload)
+                            padding = len(audio_payload) % 4
+                            if padding != 0:
+                                audio_payload += "=" * (4 - padding)
+                            audio_data.append(audio_payload)
                             audio_delta = {
                                 "event": "media",
                                 "streamSid": stream_sid,
@@ -165,5 +174,4 @@ async def handle_media_stream(websocket: WebSocket):
         except Exception as e:
             print(f"Error in handle_media_stream: {e}")
         finally:
-            pass
-            # 必要に応じて、ここでsend_base64_audio(user_audio_data, ai_audio_data, ...) を呼び出す。
+            send_base64_audio(audio_data, call_sid, KIKUCHI_API_URL)

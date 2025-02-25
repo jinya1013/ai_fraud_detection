@@ -18,6 +18,8 @@ dependencies = [
     "websockets",
     "twilio",
     "python-multipart",
+    "httpx",
+    "openai",
 ]
 
 [project.optional-dependencies]

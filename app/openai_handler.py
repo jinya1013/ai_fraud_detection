@@ -1,7 +1,9 @@
 import json
 
+from fastapi import WebSocket
 
-async def send_session_update(openai_ws, voice, system_message):
+
+async def send_session_update(openai_ws: WebSocket, voice: str, system_message: str):
     """Send session update to OpenAI WebSocket."""
     session_update = {
         "type": "session.update",

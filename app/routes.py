@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import json
 
 from fastapi import APIRouter
@@ -12,18 +11,19 @@ from twilio.twiml.voice_response import Connect
 from twilio.twiml.voice_response import VoiceResponse
 import websockets
 
-from .audio import send_base64_audio  # 必要に応じて利用
+from .audio import save_based64_audio
 from .config import FORWARD_PHONE_NUMBER
-from .config import KIKUCHI_API_URL
 from .config import LOG_EVENT_TYPES
 from .config import OPENAI_API_KEY
+from .config import SAKURAI_API_URL
 from .config import SYSTEM_MESSAGE
-from .config import SYSTEM_MESSAGE_EN
 from .config import TWILIO_ACCOUNT_SID
 from .config import TWILIO_AUTH_TOKEN
 from .config import VOICE
 from .judge_forward import should_forward_call
+from .kikuchi_handler import send_base64_audio_to_kikuchi
 from .openai_handler import send_session_update
+from .twilio_handler import download_and_send_recording
 
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -71,6 +71,25 @@ async def handle_incoming_call(request: Request):
     connect.stream(url=f"wss://{host}/media-stream")
     response.append(connect)
     return HTMLResponse(content=str(response), media_type="application/xml")
+
+
+@router.api_route("/recording-callback", methods=["GET", "POST"])
+async def handle_recording_callback(request: Request):
+    """転送通話の録音完了後のコールバックを処理する。"""
+    form_data = await request.form()
+
+    print("=== 録音コールバック詳細 ===")
+    print(f"Form Data: {dict(form_data)}")
+
+    recording_sid = form_data.get("RecordingSid")
+    recording_url = form_data.get("RecordingUrl")
+    related_call_sid = form_data.get("CallSid")
+
+    if recording_url:
+        print(f"録音URL: {recording_url}")
+        await download_and_send_recording(recording_url, recording_sid, related_call_sid)
+
+    return HTMLResponse(content="Recording received")
 
 
 @router.websocket("/media-stream")
@@ -159,11 +178,24 @@ async def handle_media_stream(websocket: WebSocket):
                         if response_output:
                             transcript = response_output[0]["content"][0]["transcript"]
                             print(f"Transcript: {transcript}")
-                            if should_forward_call(transcript):
-                                print(f"Forwarding call to {FORWARD_PHONE_NUMBER}")
-                                client.calls(call_sid).update(
-                                    twiml=f"<Response><Dial>{FORWARD_PHONE_NUMBER}</Dial></Response>"
-                                )
+                            print(f"Forwarding call to {FORWARD_PHONE_NUMBER}")
+                            twiml = f"""
+                            <Response>
+                                <Dial record="record-from-answer" recordingStatusCallback="{SAKURAI_API_URL}/recording-callback">
+                                    {FORWARD_PHONE_NUMBER}
+                                </Dial>
+                            </Response>
+                            """
+                            client.calls(call_sid).update(twiml=twiml)
+                            await openai_ws.close()
+                            break
+                            # if should_forward_call(transcript):
+                            #     print(f"Forwarding call to {FORWARD_PHONE_NUMBER}")
+                            #     client.calls(call_sid).update(
+                            #         twiml=f"<Response><Dial>{FORWARD_PHONE_NUMBER}</Dial></Response>"
+                            #     )
+                            #     await openai_ws.close()
+                            #     break
             except Exception as e:
                 print(f"Error in send_to_twilio: {e}")
 
@@ -174,4 +206,5 @@ async def handle_media_stream(websocket: WebSocket):
         except Exception as e:
             print(f"Error in handle_media_stream: {e}")
         finally:
-            send_base64_audio(audio_data, call_sid, KIKUCHI_API_URL)
+            send_base64_audio_to_kikuchi(audio_data, call_sid, "ai")
+            # save_based64_audio(audio_data, call_sid)

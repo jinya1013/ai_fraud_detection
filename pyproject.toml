@@ -10,7 +10,7 @@ authors = [
     {name = "Jinya Sakruai", email = "gab102manda100@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.8, <3.13"
 dependencies = [
     "fastapi",
     "uvicorn",
@@ -20,6 +20,7 @@ dependencies = [
     "python-multipart",
     "httpx",
     "openai",
+    "aiofiles",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +28,7 @@ dev = [
     "pytest",
     "mypy",
     "pre-commit",
+    "ruff",
 ]
 
 [tool.ruff]

@@ -5,7 +5,7 @@ import aiohttp
 
 from .config import TWILIO_ACCOUNT_SID
 from .config import TWILIO_AUTH_TOKEN
-from .kikuchi_handler import send_base64_audio_to_kikuchi
+from .kikuchi_handler import send_base64_audio_data
 
 
 async def download_and_send_recording(
@@ -42,7 +42,7 @@ async def download_and_send_recording(
 
                     # データをBase64エンコードしてKikuchi APIへ送信
                     base64_encoded_audio = base64.b64encode(audio_data).decode("utf-8")
-                    await send_base64_audio_to_kikuchi(base64_encoded_audio, call_sid, "human")
+                    await send_base64_audio_data(base64_encoded_audio, call_sid, "human")
                 else:
                     print(f"録音の取得に失敗しました。ステータスコード: {response.status}")
     except Exception as e:

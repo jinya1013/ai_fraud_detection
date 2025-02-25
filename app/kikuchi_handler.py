@@ -7,7 +7,11 @@ from .config import KIKUCHI_API_URL
 
 
 async def send_base64_audio_data(
-    based64_encoded_audio: str, phone_id: str, audio_type: str, url: str, headers: dict
+    based64_encoded_audio: str,
+    phone_id: str,
+    audio_type: str,
+    url: str = KIKUCHI_API_URL,
+    headers: dict = {"Content-Type": "application/json"},
 ) -> bool:
     """
     エンコード済み音声データを指定のAPIへ非同期で送信する。

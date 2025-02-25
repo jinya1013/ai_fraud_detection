@@ -11,7 +11,6 @@ from twilio.twiml.voice_response import Connect
 from twilio.twiml.voice_response import VoiceResponse
 import websockets
 
-from .audio import save_based64_audio
 from .config import FORWARD_PHONE_NUMBER
 from .config import LOG_EVENT_TYPES
 from .config import OPENAI_API_KEY

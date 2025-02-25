@@ -11,6 +11,7 @@ if not OPENAI_API_KEY:
 
 PORT = int(os.getenv("PORT", 5050))
 KIKUCHI_API_URL = os.getenv("KIKUCHI_API_URL")
+SAKURAI_API_URL = os.getenv("SAKURAI_API_URL")
 NUMBER_TO_FORWARD = os.getenv("NUMBER_TO_FORWARD")
 
 VOICE = "sage"
@@ -19,7 +20,7 @@ SYSTEM_MESSAGE = """あなたは、高齢者を電話やオンラインでの詐
 # 主な役割
 - かかってくる電話に高齢者の代わりに対応します。
 - 通話内容を分析し、詐欺の疑いがあるかどうかを判断します。
-- 判断は、通話内容を詳細に分析して、慎重に行なってください。
+- 判断は、通話内容を詳細に分析して、慎重に行なってください。安易に詐欺であると判断したり、詐欺でないと判断したりしないでください。
 - 詐欺の疑いがある場合  
     通話を遮断し、高齢者に転送しないようにします。
 - 安全だと判断した場合  
@@ -123,6 +124,7 @@ The following conditions indicate that a call is safe and can be forwarded to th
 
 This version ensures that the AI speaks entirely in English during the call interactions.
 """
+
 LOG_EVENT_TYPES = [
     "response.content.done",
     "rate_limits.updated",

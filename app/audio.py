@@ -1,9 +1,9 @@
+import audioop
 import base64
+import wave
 
-import httpx
 
-
-def process_audio_chunks(audio_chunks: list) -> str:
+def process_audio_chunks(audio_chunks: list[str]) -> str:
     """
     複数のBase64エンコードされたチャンクを結合し、
     再度1つのBase64エンコードされた文字列に変換して返す。
@@ -16,39 +16,30 @@ def process_audio_chunks(audio_chunks: list) -> str:
     return base64.b64encode(decoded_data).decode("utf-8")
 
 
-def send_audio_data(
-    encoded_audio: str, phone_id: str, audio_type: str, url: str, headers: dict
-) -> bool:
+def save_audio_wav(base64_audio_data: str, phone_id: str):
     """
-    エンコード済み音声データを指定のAPIへ送信する。
-    成功時はTrue、失敗時はFalseを返す。
+    Base64エンコードされた音声データをWAVファイルに保存する。
     """
-    payload = {"phoneId": phone_id, "encoded": encoded_audio, "type": audio_type}
+    # mu-law を PCM (リニア) にデコード
+    # mu-lawは通常、8000Hz、8bitでエンコードされている
+    mulaw_data = base64.b64decode(base64_audio_data)
+    pcm_data = audioop.ulaw2lin(mulaw_data, 2)  # 2はサンプル幅（16bit = 2バイト）
 
+    # wavファイルとして書き出し
+    output_wav = f"{phone_id}.wav"
+    with wave.open(output_wav, "wb") as wf:
+        wf.setnchannels(1)  # モノラル
+        wf.setsampwidth(2)  # 16bit PCM
+        wf.setframerate(8000)  # サンプリングレート 8000Hz
+        wf.writeframes(pcm_data)
+
+
+def save_based64_audio(audio_data_chunk: list[str], phone_id: str):
+    """
+    Base64エンコードされた音声データをファイルに保存する。
+    """
     try:
-        response = httpx.post(url, json=payload, headers=headers)
-        if response.status_code == 200:
-            print(f"{audio_type} 音声データの送信に成功しました。")
-            return True
-        else:
-            print(
-                f"{audio_type} 音声データの送信に失敗しました: {response.status_code} - {response.text}"
-            )
-            return False
-    except httpx.RequestError as e:
-        print(f"{audio_type} 音声データ送信時にHTTPリクエストエラーが発生しました: {e}")
-        return False
-
-
-def send_base64_audio(audio_data: list, phone_id: str, api_url: str):
-    """
-    ユーザとAIのBase64エンコードされた音声チャンクを結合し、
-    外部APIへ送信する。
-    """
-    headers = {"Content-Type": "application/json"}
-
-    try:
-        encoded_audio = process_audio_chunks(audio_data)
-        send_audio_data(encoded_audio, phone_id, "ai", api_url, headers)
+        encoded_audio = process_audio_chunks(audio_data_chunk)
+        save_audio_wav(encoded_audio, phone_id)
     except ValueError as e:
         print(f"音声データの処理エラー: {e}")

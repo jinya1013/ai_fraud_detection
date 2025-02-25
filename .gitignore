@@ -114,3 +114,5 @@ ENV/
 docs/_build/
 docs/source/reference/generated/
 docs/source/sg_execution_times.rst
+
+*.wav

@@ -115,4 +115,9 @@ docs/_build/
 docs/source/reference/generated/
 docs/source/sg_execution_times.rst
 
+<<<<<<< HEAD
+# env files
+.env.local
+=======
 *.wav
+>>>>>>> @{-1}
